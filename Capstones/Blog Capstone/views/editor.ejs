@@ -9,6 +9,8 @@
     <%- include("partials/header.ejs") %>
     <div class="main_content">
         <h1>Speak Your Mind</h1>
+        <!-- Form action configured by backend routing. Will either create a new post or update an old one. -->
+         <!-- Text inputs will autofill with the associated post's title and content when applicable. -->
         <form action=<%= action %> method="post">
             <label for="title">Title</label>
             <input type="text" name="title" value="<%= (postIndex != -1) ? posts[postIndex].title : "";%>">

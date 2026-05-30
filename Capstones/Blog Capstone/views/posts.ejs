@@ -9,15 +9,18 @@
     <%- include("partials/header.ejs") %>
     <div class="main_content">
         <h1>Your Posts</h1>
+        <!-- If the user has created posts, they are displayed. Otherwise an alternative message is displayed. -->
         <% if(posts.length > 0) { %>
             <ul>
                 <% posts.forEach((post, index) => { %>
                     <li>
                         <p><%= post.title %></p>
                         <p><%= post.content %></p>
+                        <!-- Edits the post -->
                         <form action=<%= `/editor?postIndex=${index}` %> method="get">
                             <input type="submit" value="Edit">
                         </form>
+                        <!-- Deletes the post -->
                         <form action=<%= `/delete?_method=DELETE&postIndex=${index}` %> method="post">
                             <input type="submit" value="Delete">
                         </form>
@@ -33,5 +36,4 @@
     </div>
     <%- include("partials/footer.ejs") %>
 </body>
-<script src="../public/scripts/posts.js"></script>
 </html>
