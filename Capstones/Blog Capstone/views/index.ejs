@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Da' Blog</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <%- include("partials/header.ejs") %>
+
+    <div class="main_content">
+        <h1>Da' Blog!</h1>
+        <h3>A private blog, just for you! Login below to start.</h3>
+
+        <form action="/posts" method="get">
+            <label for="email">Email</label>
+            <input type="text" name="email" id="">
+            <label for="pswd">Password</label>
+            <input type="password" name="pswd" id="">
+            <input type="submit" name="login" value="Login">
+        </form>
+    </div>
+
+    <%- include("partials/footer.ejs") %>
+</body>
+</html>

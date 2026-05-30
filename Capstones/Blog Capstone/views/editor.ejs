@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor</title>
+</head>
+<body>
+    <%- include("partials/header.ejs") %>
+    <div class="main_content">
+        <h1>Speak Your Mind</h1>
+        <form action=<%= action %> method="post">
+            <label for="title">Title</label>
+            <input type="text" name="title" value="<%= (postIndex != -1) ? posts[postIndex].title : "";%>">
+            <label for="content">Content</label>
+            <input type="text" name="content" value="<%= (postIndex != -1) ? posts[postIndex].content : "" %>">
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    <%- include("partials/footer.ejs") %>
+</body>
+</html>

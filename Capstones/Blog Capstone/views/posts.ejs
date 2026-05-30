@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts</title>
+</head>
+<body>
+    <%- include("partials/header.ejs") %>
+    <div class="main_content">
+        <h1>Your Posts</h1>
+        <% if(posts.length > 0) { %>
+            <ul>
+                <% posts.forEach((post, index) => { %>
+                    <li>
+                        <p><%= post.title %></p>
+                        <p><%= post.content %></p>
+                        <form action=<%= `/editor?postIndex=${index}` %> method="get">
+                            <input type="submit" value="Edit">
+                        </form>
+                        <form action=<%= `/delete?_method=DELETE&postIndex=${index}` %> method="post">
+                            <input type="submit" value="Delete">
+                        </form>
+                    </li>
+                <% }); %>
+            </ul>
+            <h3><a href="/editor">New Post</a></h3>
+        <% }else{ %>
+            <h3>No one here but us chickens.</h3>
+            <h3>Why not make your first post?</h3>
+            <a href="/editor">Post</a>
+        <% } %>
+    </div>
+    <%- include("partials/footer.ejs") %>
+</body>
+<script src="../public/scripts/posts.js"></script>
+</html>
