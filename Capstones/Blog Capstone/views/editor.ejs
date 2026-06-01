@@ -6,18 +6,25 @@
     <title>Editor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <%- include("partials/header.ejs") %>
-    <div class="main_content">
+    <div class="d-flex flex-column container-lg text-center flex-grow-1 mt-5">
         <h1>Speak Your Mind</h1>
         <!-- Form action configured by backend routing. Will either create a new post or update an old one. -->
          <!-- Text inputs will autofill with the associated post's title and content when applicable. -->
-        <form action=<%= action %> method="post">
-            <label for="title">Title</label>
-            <input type="text" name="title" value="<%= (postIndex != -1) ? posts[postIndex].title : "";%>">
-            <label for="content">Content</label>
-            <input type="text" name="content" value="<%= (postIndex != -1) ? posts[postIndex].content : "" %>">
-            <input type="submit" value="Submit">
+        <form class="d-flex flex-grow-1" action=<%= action %> method="post">
+            <div class="d-flex flex-column align-items-center flex-grow-1">
+                <section class="form-floating w-100 mt-4 mb-3">
+                    <input type="text" name="title" class="form-control" placeholder="Title" value="<%= (postIndex != -1) ? posts[postIndex].title : "";%>">
+                    <label for="title">Title</label>    
+                </section>
+                <section class="form-floating w-100 flex-grow-1">
+                    <textarea name="content" class="form-control h-100" placeholder="Content"><%= (postIndex != -1) ? posts[postIndex].content : "" %></textarea>
+                    <label for="content">Content</label>
+                </section>
+                <input type="hidden" name="date" value=<%= new Date().toLocaleDateString(); %>>
+                <button class="btn btn-success col-1 mt-3" style="min-width: 82px;" type="submit"><%= (postIndex != -1) ? "Update" : "Create" %></button>
+            </div>
         </form>
     </div>
     <%- include("partials/footer.ejs") %>

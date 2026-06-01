@@ -29,7 +29,6 @@ app.get("/editor", (req, res) => {
     var action = "";
     //sets 'postIndex' to the submitted param if available, otherwise it is -1. 
     var postIndex = req.query.postIndex || -1;
-    console.log(req.url)
     if(postIndex != -1){
         action = `/update?_method=PUT&postIndex=${postIndex}`
     }else{
@@ -54,6 +53,7 @@ app.post("/create", (req, res) => {
     posts.push({
         title: req.body.title,
         content: req.body.content,
+        date: req.body.date,
     });
     res.redirect("/posts");
 });
@@ -64,6 +64,7 @@ app.put("/update", (req, res) => {
     posts[req.query.postIndex] = {
         title: req.body.title,
         content: req.body.content,
+        date: req.body.date,
     };
     res.redirect("/posts");
 });
