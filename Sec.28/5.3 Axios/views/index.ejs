@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/styles/main.css">
+  <title>I'm Bored</title>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Let's find something for you to do ✌️</h1>
+
+    <!-- Posts the user's selections for activity filtering.  -->
+    <form action="/" id="form" class="form" method="POST">
+      <select name="type" class="form-select">
+        <option value="" data-display="Select">Random type</option>
+        <option value="education">Education</option>
+        <option value="charity">Charity</option>
+        <option value="recreational">Recreational</option>
+        <option value="relaxation">Relaxation</option>
+        <option value="busywork">Busywork</option>
+        <option value="social">Social</option>
+        <option value="diy">DIY</option>
+        <option value="music">Music</option>
+      </select>
+      <select name="participants" class="form-select">
+        <option value="">Any number of people</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+      <button type="submit" class="form-submit">Go</button>
+    </form>
+    <section id="cards" class="cards">
+      <!-- Creates an activity card for each activity sent from Express. -->
+       <!-- If the user is landing for the first time, a single random activity is shown. -->
+      <% if(locals.data){ %>
+        <% if(Array.isArray(data)) { %>
+          <% data.forEach(activity => { %>
+            <article class="card-item">
+              <h2 class="card-activity">
+                <%= activity.activity; %>
+              </h2>
+              <div class="card-info">
+                <span class="card-type">
+                  <%= activity.type; %>
+                </span>
+                <span class="card-participants">
+                  <%= activity.participants; %>
+                  <span class="card-number"><%= activity.key; %></span>
+                </span>
+              </div>
+            </article>
+          <% });%>
+        <% }else{ %>
+          <article class="card-item">
+            <h2 class="card-activity">
+              <%= data.activity; %>
+            </h2>
+            <div class="card-info">
+              <span class="card-type">
+                <%= data.type; %>
+              </span>
+              <span class="card-participants">
+                <%= data.participants; %>
+                <span class="card-number"><%= data.key; %></span>
+              </span>
+            </div>
+          </article>
+        <% } %>
+      <% } %>
+
+      <!-- Renders a card containing information about the error as needed. -->
+      <div id="tag-error" class="tag-error">
+        <% if(locals.error){ %>
+          <article class="card-item">
+            <h2 class="card-activity">
+              <%= error; %>
+            </h2>
+          </article>
+        <% } %>
+      </div>
+
+    </section>
+  </div>
+
+</body>
+
+</html>
