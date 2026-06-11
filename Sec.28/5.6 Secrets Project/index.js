@@ -14,7 +14,6 @@ app.use(express.static("public"));
 app.get("/", async (req, res) => {
     try {
         const result = await axios.get(API_URL);
-        console.log(result);
         res.render("index.ejs", { secret:result.data.secret, user:result.data.username });
     } catch (error) {
         console.log(error.message);
