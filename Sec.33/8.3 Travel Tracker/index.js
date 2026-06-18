@@ -31,7 +31,8 @@ app.get("/", async (req, res) => {
   //Renders the index.
   res.render("index.ejs", {
     countries: codes,
-    total: visited.rows.length
+    total: visited.rows.length,
+    error: (req.query.err) ? req.query.err : null,
   });
 });
 
@@ -40,6 +41,7 @@ app.post("/add", async (req, res) => {
   let country = req.body.country;
   let result;
   let code;
+  let err;
 
   //Attempts to find the right country code based on the string submitted. 
   try {
@@ -56,12 +58,19 @@ app.post("/add", async (req, res) => {
       await pool.query("INSERT INTO visited_countries (country_code) VALUES ($1)", [code]);
     } catch (error) {
       console.error("Query Failed: " + error.message);
+      err = `You have already visited ${country}.`;
     }
   }else{
     console.error("Query returned no results.");
+    err = country + " does not match any country in our database. Try again.";
   }
 
-  res.redirect("/");
+  //Passes an error as a query parameter if an error has occurred. 
+  if(err){
+    res.redirect(`/?err=${err}`);
+  }else{
+    res.redirect("/");
+  }
 });
 
 //Starts the app listening.
