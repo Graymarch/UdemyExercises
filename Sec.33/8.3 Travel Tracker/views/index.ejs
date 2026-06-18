@@ -376,12 +376,13 @@
   </h2>
 
   <!-- Highlights which countries have been visited. -->
+  <!-- Even though we pass an array into index.ejs, we can't access it without the EJS operator which returns the value
+  instead of an array. So we wrap the value in quotes, and separate back into an array with split(",") -->
   <script>
     const country_codes = "<%= countries %>".split(",") 
     country_codes.forEach(code => {
       document.getElementById(code).style.fill = 'teal'
     });
-
   </script>
 </body>
 

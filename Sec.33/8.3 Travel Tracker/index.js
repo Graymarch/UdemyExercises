@@ -2,59 +2,41 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
-import dotenv from "dotenv";
-
-//Configuration settings. 
-
- //Configures the environment file. 
-dotenv.config({path: "./.env"});
-let env = process.env;
+import pool from "./db.js";
 
 //Setup for the Express app. 
 const app = express();
 const port = 3000;
 
-//Setup for the Postgres API. 
-const db = new pg.Client({
-  user: env.USER,
-  host: env.HOST,
-  database: env.DATABASE,
-  password: env.PASSWORD,
-  port: env.PORT
-});
-
 //Middleware for the express app. 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-//Connects to the Postgres database.
-db.connect();
-
-//Attempts to query the database for all visited countries' codes. 
-let visited;
-try {
-  visited = await db.query("SELECT country_code FROM visited_countries");
-} catch (error) {
-  console.error("Query Failed: " + error.message);
-}
-
-//Closes the connection to the database. 
-db.end();
-
 //Index route. 
 app.get("/", async (req, res) => {
-  //Concatenates the country codes into a comma delineated string. 
-  let codes = "";
+
+  //Queries postgres for visisted countries.
+  let visited;
+  try {
+    visited = await pool.query("SELECT country_code FROM visited_countries");
+  } catch (error) {
+    console.error("Query Failed: " + error.message);
+  }
+
+  //Pushes the country codes into an array. 
+  let codes = [];
   visited.rows.forEach(country => {
-    codes += country.country_code + ",";
+    codes.push(country.country_code);
   });
 
+  //Renders the index.
   res.render("index.ejs", {
     countries: codes,
     total: visited.rows.length
   });
 });
 
+//Starts the app listening.
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
