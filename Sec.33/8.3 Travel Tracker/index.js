@@ -14,7 +14,6 @@ app.use(express.static("public"));
 
 //Index route. 
 app.get("/", async (req, res) => {
-
   //Queries postgres for visisted countries.
   let visited;
   try {
@@ -28,12 +27,41 @@ app.get("/", async (req, res) => {
   visited.rows.forEach(country => {
     codes.push(country.country_code);
   });
-
+  console.log(codes);
   //Renders the index.
   res.render("index.ejs", {
     countries: codes,
     total: visited.rows.length
   });
+});
+
+//Add a visited country route
+app.post("/add", async (req, res) => {
+  let country = req.body.country;
+  let result;
+  let code;
+
+  //Attempts to find the right country code based on the string submitted. 
+  try {
+    result = await pool.query("SELECT country_code FROM countries WHERE LOWER($1) = LOWER(country_name)", [country]);
+  } catch (error) {
+    console.error("Query Failed: " + error.message);
+  }
+
+  //Checks to make sure a code was found before attempting to insert it into the visited_countries table.
+  //Then, redirects to the index page. 
+  if(result.rowCount > 0){
+    code = result.rows[0].country_code;
+    try {
+      await pool.query("INSERT INTO visited_countries (country_code) VALUES ($1)", [code]);
+    } catch (error) {
+      console.error("Query Failed: " + error.message);
+    }
+  }else{
+    console.error("Query returned no results.");
+  }
+
+  res.redirect("/");
 });
 
 //Starts the app listening.
