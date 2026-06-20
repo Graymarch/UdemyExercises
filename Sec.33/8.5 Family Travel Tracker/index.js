@@ -37,12 +37,12 @@ async function checkVisisted(user_id) {
   return countries;
 }
 app.get("/", async (req, res) => {
-  const countries = await checkVisisted(users[0].id);
+  const countries = await checkVisisted(users.find(user => user.id == currentUserId).id);
   res.render("index.ejs", {
     countries: countries,
     total: countries.length,
     users: users,
-    color: users[0].color,
+    color: users.find(user => user.id == currentUserId).color,
   });
 });
 
@@ -62,32 +62,57 @@ app.post("/add", async (req, res) => {
         "INSERT INTO user_visits VALUES ($1, $2)",
         [currentUserId, country_id]
       );
-      res.redirect("/");
     } catch (err) {
       console.log(err);
     }
   } catch (err) {
     console.log(err);
   }
+  res.redirect("/");
 });
 
 app.post("/user", async (req, res) => {
-  let user_id = req.body.user;
-  currentUserId = user_id;
+  if(req.body.add){
+    res.render("new.ejs");
+  }else{
+    let user_id
 
-  const countries = await checkVisisted(user_id);
-  
-  res.render("index.ejs", {
-    countries: countries,
-    total: countries.length,
-    users: users,
-    color: users.find(user => user.id == user_id).color,
-  });
+    if(req.body.user){
+      user_id = req.body.user;
+      currentUserId = user_id;
+    }
+
+    const countries = await checkVisisted(user_id);
+    console.log(countries);
+    
+    
+    res.render("index.ejs", {
+      countries: countries,
+      total: countries.length,
+      users: users,
+      color: users.find(user => user.id == user_id).color,
+    });
+  }
 });
 
 app.post("/new", async (req, res) => {
-  //Hint: The RETURNING keyword can return the data that was inserted.
-  //https://www.postgresql.org/docs/current/dml-returning.html
+  let name = req.body.name;
+  let color = req.body.color;
+
+  try {
+    let response = await pool.query(
+      `INSERT INTO users (name, color) 
+      VALUES ($1, $2)
+      RETURNING *;`, 
+      [name, color]
+    );    
+
+    users.push(response.rows[0]);
+    currentUserId = users[users.length-1].id;
+  } catch (error) {
+    console.log(error);
+  }
+  res.redirect("/");
 });
 
 app.listen(port, () => {

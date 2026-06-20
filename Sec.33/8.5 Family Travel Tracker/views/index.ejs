@@ -15,7 +15,6 @@
       <label for="<%= user.id %>" style="background-color: <%= user.color %>;">
         <%= user.name %>
       </label>
-      <% console.log("User: " + user.id); %>
       <% }); %>
 
         <input type="submit" name="add" value="new" id="tab">
@@ -392,7 +391,12 @@
     const country_codes = "<%= countries %>".split(",")
     console.log(typeof ("<%= countries %>"))
     country_codes.forEach(code => {
-      document.getElementById(code).style.fill = "<%= color %>"
+      console.log(code);
+      try {
+        document.getElementById(code).style.fill = "<%= color %>"
+      } catch (error) {
+        console.log(`Country code ${code} not found. Skipping.`);
+      }
     });
   </script>
 </body>
