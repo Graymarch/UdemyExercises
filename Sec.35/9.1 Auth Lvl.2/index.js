@@ -2,10 +2,12 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pool from "./db.js"
+import bcrypt from "bcrypt";
 
 //App configuration
 const app = express();
 const port = 3000;
+const saltRounds = 10; //How many times the password should be salted and hashed. 
 
 //Middleware configuration
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -41,16 +43,24 @@ app.post("/register", async (req, res) => {
       [email]
     );
   
+    //Checks if the email has already registered. 
     if(checkUser.rows.length > 0) {
       res.send("This email has already been registered. Try logging in.");
     } else {
-      const result = await pool.query(
-        `INSERT INTO users (email, password)
-        VALUES ($1, $2)`, 
-        [email, password]
-      );
-    
-      res.render("secrets.ejs");
+      //Hashes the password with bcrypt and saves it in postgres. 
+      bcrypt.hash(password, saltRounds, async (err, hash) => {
+        if(err){
+          console.error("Registration Failed: " + err);
+        }else{
+          const result = await pool.query(
+            `INSERT INTO users (email, password)
+            VALUES ($1, $2)`, 
+            [email, hash]
+          );
+          
+          res.render("secrets.ejs");
+        }
+      });
     }
   } catch (err) {
     console.error(err);
@@ -60,20 +70,33 @@ app.post("/register", async (req, res) => {
 //Attempts to login the user. 
 app.post("/login", async (req, res) => {
   const email = req.body.username;
-  const password = req.body.password;
+  const loginPassword = req.body.password;
 
+  //Pulls the email and hashed password from postgres. 
   try {
     const result = await pool.query(
       `SELECT email, password
       FROM users
-      WHERE email = $1 AND password = $2`, 
-      [email, password]
+      WHERE email = $1`, 
+      [email]
     );
   
     if(result.rows.length == 0){
       res.send("Login failed. Double check your inputs and try again.");
     }else{
-      res.render("secrets.ejs");
+      const user = result.rows[0];
+      const storedPassword = user.password;
+
+      //Bcrypt compares the hash of the submitted password to the storedPassword. 
+      bcrypt.compare(loginPassword, storedPassword, (err, result) => {
+        if(err){
+          console.error("Login Failed: " + err);
+        }else if(result){
+          res.render("secrets.ejs");
+        }else{
+          res.send("Login failed. Double check your inputs and try again.");
+        }
+      });
     }
   } catch (err) {
     console.error(err);
