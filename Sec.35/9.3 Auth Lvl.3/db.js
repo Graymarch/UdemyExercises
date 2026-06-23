@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 //Configures the environment file. 
 dotenv.config({path: "./.env"});
-let env = process.env;
+const env = process.env;
 
 //Creates a postgres connection pool.
 const pool = new pg.Pool({

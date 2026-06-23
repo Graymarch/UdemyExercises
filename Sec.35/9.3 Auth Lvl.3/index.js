@@ -3,15 +3,28 @@ import express from "express";
 import bodyParser from "body-parser";
 import pool from "./db.js"
 import bcrypt from "bcrypt";
+import session from "express-session";
+import dotenv from "dotenv";
+import passport from "passport";
+import { Strategy } from "passport-local";
 
 //App configuration
 const app = express();
 const port = 3000;
 const saltRounds = 10; //How many times the password should be salted and hashed. 
+dotenv.config({path: "./.env"});
+const env = process.env;
 
 //Middleware configuration
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.use(session({
+  secret: env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 //Index route. 
 app.get("/", (req, res) => {
@@ -26,6 +39,14 @@ app.get("/login", (req, res) => {
 //Renders the registration page. 
 app.get("/register", (req, res) => {
   res.render("register.ejs");
+});
+
+app.get("/secrets", (req, res) => {
+  if(req.isAuthenticated()){
+    res.render("secrets.ejs");
+  }else{
+    res.redirect("/login");
+  }
 });
 
 //Attempts to register a user. 
@@ -68,39 +89,53 @@ app.post("/register", async (req, res) => {
 });
 
 //Attempts to login the user. 
-app.post("/login", async (req, res) => {
-  const email = req.body.username;
-  const loginPassword = req.body.password;
-
-  //Pulls the email and hashed password from postgres. 
-  try {
-    const result = await pool.query(
-      `SELECT email, password
-      FROM users
-      WHERE email = $1`, 
-      [email]
-    );
-  
-    if(result.rows.length == 0){
-      res.send("Login failed. Double check your inputs and try again.");
-    }else{
-      const user = result.rows[0];
-      const storedPassword = user.password;
-
-      //Bcrypt compares the hash of the submitted password to the storedPassword. 
-      bcrypt.compare(loginPassword, storedPassword, (err, result) => {
-        if(err){
-          console.error("Login Failed: " + err);
-        }else if(result){
-          res.render("secrets.ejs");
-        }else{
-          res.send("Login failed. Double check your inputs and try again.");
-        }
-      });
-    }
-  } catch (err) {
-    console.error(err);
+app.post("/login", passport.authenticate("local", {
+    successRedirect: "/secrets",
+    failureRedirect: "/login"
   }
+));
+
+passport.use(
+  new Strategy(async function verify (username, password, cb) {
+    //Pulls the email and hashed password from postgres. 
+    try {
+      const result = await pool.query(
+        `SELECT email, password
+        FROM users
+        WHERE email = $1`, 
+        [username]
+      );
+    
+      if(result.rows.length == 0){
+        return cb("User not found");
+      }else{
+        const user = result.rows[0];
+        const storedPassword = user.password;
+
+        //Bcrypt compares the hash of the submitted password to the storedPassword. 
+        bcrypt.compare(password, storedPassword, (err, result) => {
+          if(err){
+            cb(err);
+            console.error("Login Failed: " + err);
+          }else if(result){
+            return cb(null, user);
+          }else{
+            return cb(null, false);
+          }
+        });
+      }
+    } catch (err) {
+      return cb(err);
+    }
+  })
+);
+
+passport.serializeUser((user, cb) => {
+  cb(null, user);
+});
+
+passport.deserializeUser((user, cb) => {
+  cb(null, user);
 });
 
 //Starts the app listening.
