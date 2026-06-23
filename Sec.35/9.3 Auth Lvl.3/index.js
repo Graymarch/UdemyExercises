@@ -88,13 +88,29 @@ app.post("/register", async (req, res) => {
   }
 });
 
-//Attempts to login the user. 
+//Attempts to login the user with the local Passport Strategy.  
+/*
+-> The 'local' argument identifies which strategy to use. In this case it uses the local strategy defined below. 
+
+-> successRedirect identifies where to go if authentication is successful. 
+
+-> failureRedirect identifies where to go if authentication is unsuccessful. 
+*/
 app.post("/login", passport.authenticate("local", {
     successRedirect: "/secrets",
     failureRedirect: "/login"
   }
 ));
 
+//Defines the local passport strategy. In effect just took all the authentication logic which was originally in "/login" post route. 
+/*
+-> The username and password params automatically find the credentials that are posted to the login page, assuming the names
+are the same. 
+
+-> The cb param is a callback defined by Passport: (error: any, user?: false | Express.User | undefined, options?: IVerifyOptions) => void
+The error param is nullable and accepts String values and Error values. The user param is meant for objects representing users but can
+be set to false if no user is applicable. 
+*/
 passport.use(
   new Strategy(async function verify (username, password, cb) {
     //Pulls the email and hashed password from postgres. 
@@ -118,7 +134,7 @@ passport.use(
             cb(err);
             console.error("Login Failed: " + err);
           }else if(result){
-            return cb(null, user);
+            return cb(null, user); //Authenticates the user. 
           }else{
             return cb(null, false);
           }
@@ -130,6 +146,7 @@ passport.use(
   })
 );
 
+//Abstract methods provided by Passport to store and retrieve the user data locally. 
 passport.serializeUser((user, cb) => {
   cb(null, user);
 });
