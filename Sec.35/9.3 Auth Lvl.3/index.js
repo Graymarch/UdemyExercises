@@ -7,6 +7,7 @@ import session from "express-session";
 import dotenv from "dotenv";
 import passport from "passport";
 import { Strategy } from "passport-local";
+import GoogleStrategy from "passport-google-oauth2"
 
 //App configuration
 const app = express();
@@ -52,6 +53,22 @@ app.get("/secrets", (req, res) => {
   }else{
     res.redirect("/login");
   }
+});
+
+app.get("/auth/google", passport.authenticate("google", {
+  scope: ["profile", "email"]
+}));
+
+app.get("/auth/google/secrets", passport.authenticate("google", {
+  successRedirect: "/secrets",
+  failureRedirect: "/login"
+}));
+
+app.get("/logout", (req, res) => {
+  req.logout(err => {
+    if(err) console.error(err);
+    res.redirect("/");
+  });
 });
 
 //Attempts to register a user. 
@@ -126,8 +143,7 @@ are the same.
 The error param is nullable and accepts String values and Error values. The user param is meant for objects representing users but can
 be set to false if no user is applicable. 
 */
-passport.use(
-  new Strategy(async function verify (username, password, cb) {
+passport.use("local", new Strategy(async function verify (username, password, cb) {
     //Pulls the email and hashed password from postgres. 
     try {
       const result = await pool.query(
@@ -160,6 +176,42 @@ passport.use(
     }
   })
 );
+
+passport.use("google", new GoogleStrategy({
+    clientID: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://localhost:3000/auth/google/secrets",
+    userProfileURL: "https://googleapis.com/oauth2/v3/userinfo"
+  },
+  async function(accessToken, refreshToken, profile, cb) {
+    console.log(profile);
+    try {
+      const result = await pool.query(
+        `SELECT *
+        FROM users
+        WHERE email = $1`,
+        [profile.email]
+      );
+
+      if(result.rows.length == 0){
+        const newUser = await pool.query(
+          `INSERT INTO users (email, password)
+          VALUES ($1, $2)`,
+          [profile.email, "google"]
+        );
+
+        cb(null, newUser.rows[0]);
+      }else{
+        //User already exists
+        cb(null, result.rows[0]);
+      }
+    } catch (error) {
+      console.error(error);
+      cb(error);
+    }
+  
+  }
+));
 
 //Abstract methods provided by Passport to store and retrieve the user data locally. 
 passport.serializeUser((user, cb) => {
