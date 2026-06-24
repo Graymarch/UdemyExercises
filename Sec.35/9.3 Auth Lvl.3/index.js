@@ -22,6 +22,9 @@ app.use(session({
   secret: env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
+  cookie: {
+    maxAge: 1000 * 3600 * 24, //Sets the maximum age of the cookie in milliseconds. Otherwise, it expires too quickly. 
+  },
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -41,6 +44,8 @@ app.get("/register", (req, res) => {
   res.render("register.ejs");
 });
 
+//Checks for authentication, then renders the secrets page if authenticated. Otherwise it redirects to the login page. 
+//Note, if the user is authenticated with Passport, the request body will have a 'user' field containing the user data. 
 app.get("/secrets", (req, res) => {
   if(req.isAuthenticated()){
     res.render("secrets.ejs");
@@ -75,11 +80,21 @@ app.post("/register", async (req, res) => {
         }else{
           const result = await pool.query(
             `INSERT INTO users (email, password)
-            VALUES ($1, $2)`, 
+            VALUES ($1, $2)
+            RETURNING *`, 
             [email, hash]
           );
           
-          res.render("secrets.ejs");
+          //When the user's credentials are known, such as during registration, we can manually log them in 
+          //with 'req.login' which takes the user data and a callback that captures any errors. We don't handle the 
+          //error here because the '/secrets' route already checks for authentication and reroutes as needed. 
+          //From what I understand, req.login essentially manually creates the 'user' field in the request 
+          //and adds the necessary data. 
+          const user = result.rows[0];
+          req.login(user, (err) => {
+            console.log(err);
+            res.redirect("/secrets");
+          })
         }
       });
     }
@@ -134,7 +149,7 @@ passport.use(
             cb(err);
             console.error("Login Failed: " + err);
           }else if(result){
-            return cb(null, user); //Authenticates the user. 
+            return cb(null, user); //Authenticates the user. Also attaches a 'user' field to the request which can be referenced elsewhere. 
           }else{
             return cb(null, false);
           }
